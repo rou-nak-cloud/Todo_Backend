@@ -68,7 +68,7 @@ const updateTodo = async (req, res) => {
 
     const existingTasks = await todoModel.findById({ _id: taskId });
     if (!existingTasks) {
-      return res.status(400).json({
+      return res.status(404).json({
         success: false,
         message: "Todo not found..",
       });

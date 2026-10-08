@@ -7,9 +7,13 @@ dotenv.config();
 
 const registerUser = async (req, res) => {
   try {
-    const { userName, email, password } = req.body;
+    const { userName, email, password, phone } = req.body;
+    const phoneNumber = Number(phone);
 
-    const existingUser = await userModel.findOne({ email: email.trim() });
+    const existingUser = await userModel.findOne({
+      email: email.trim(),
+      phone: phoneNumber.trim(),
+    });
     if (existingUser) {
       return res.status(409).json({
         success: false,
@@ -23,15 +27,16 @@ const registerUser = async (req, res) => {
     const user = await userModel.create({
       userName: userName.trim(),
       email: email.trim(),
+      phone: phoneNumber.trim(),
       password: hashedPassword,
     });
 
     // token
-    const token = await jwt.sign(
-      { id: user._id, email: user.email },
+    const token = jwt.sign(
+      { id: user._id, userName: user.userName },
       process.env.secretKey,
       {
-        expiresIn: "5m",
+        expiresIn: "10m",
       },
     );
     user.token = token;

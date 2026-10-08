@@ -10,7 +10,7 @@ const app = express();
 connectDb();
 app.use(express.json());
 
-app.use("/todo", todoRoute);
+app.use("/api/todo", todoRoute);
 app.use("/api/user", userRoute);
 
 app.listen(process.env.PORT, () => {

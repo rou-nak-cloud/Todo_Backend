@@ -10,14 +10,20 @@ const createTodo = async (req, res) => {
       });
     }
 
-    const existingTask = await todoModel.findOne({ title: title.trim() });
+    const existingTask = await todoModel.findOne({
+      title: title.trim(),
+      userId: req.userId,
+    });
     if (existingTask) {
       return res.status(409).json({
         success: false,
         message: "A todo with this title already exists.",
       });
     }
-    const tasks = await todoModel.create({ title: title.trim() });
+    const tasks = await todoModel.create({
+      title: title.trim(),
+      userId: req.userId,
+    });
 
     res.status(201).json({
       success: true,
@@ -34,7 +40,7 @@ const createTodo = async (req, res) => {
 
 const getTodos = async (req, res) => {
   try {
-    const tasks = await todoModel.find({});
+    const tasks = await todoModel.find({ userId: req.userId });
     if (!tasks) {
       return res.status(400).json({
         success: false,
@@ -66,11 +72,22 @@ const updateTodo = async (req, res) => {
       });
     }
 
-    const existingTasks = await todoModel.findById({ _id: taskId });
+    const existingTaskPresent = await todoModel.findById({ _id: taskId });
+    if (!existingTaskPresent) {
+      return res.status(404).json({
+        success: false,
+        message: "Todo not found.",
+      });
+    }
+
+    const existingTasks = await todoModel.findOne({
+      _id: taskId,
+      userId: req.userId,
+    });
     if (!existingTasks) {
       return res.status(404).json({
         success: false,
-        message: "Todo not found..",
+        message: "Todo not found in your profile..",
       });
     }
     if (existingTasks.title === title.trim()) {
@@ -81,8 +98,8 @@ const updateTodo = async (req, res) => {
       });
     }
 
-    const updateTasks = await todoModel.findByIdAndUpdate(
-      { _id: taskId },
+    const updateTasks = await todoModel.findOneAndUpdate(
+      { _id: taskId, userId: req.userId },
       { title: title.trim() },
       { new: true },
     );
@@ -104,11 +121,24 @@ const delTodo = async (req, res) => {
   try {
     const taskId = req.params.taskId;
 
-    const deletedTasks = await todoModel.findByIdAndDelete({ _id: taskId });
-    if (!deletedTasks) {
+    const deleteTaskPresent = await todoModel.findById({
+      _id: taskId,
+    });
+    if (!deleteTaskPresent) {
       return res.status(404).json({
         success: false,
         message: "Todo not found.",
+      });
+    }
+
+    const deletedTasks = await todoModel.findOneAndDelete({
+      _id: taskId,
+      userId: req.userId,
+    });
+    if (!deletedTasks) {
+      return res.status(400).json({
+        success: false,
+        message: "You don't have permission to delete this Todo..",
       });
     }
 

@@ -5,11 +5,12 @@ import {
   getTodos,
   updateTodo,
 } from "../controllers/todoController.js";
+import { userToken } from "../middlewares/userToken.js";
 const todoRoute = express.Router();
 
-todoRoute.post("/addTask", createTodo);
-todoRoute.get("/getTask", getTodos);
-todoRoute.put("/updateTask/:taskId", updateTodo);
-todoRoute.delete("/delTask/:taskId", delTodo);
+todoRoute.post("/addTask", userToken, createTodo);
+todoRoute.get("/getTask", userToken, getTodos);
+todoRoute.put("/updateTask/:taskId", userToken, updateTodo);
+todoRoute.delete("/delTask/:taskId", userToken, delTodo);
 
 export default todoRoute;

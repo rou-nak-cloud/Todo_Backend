@@ -61,6 +61,29 @@ const getTodos = async (req, res) => {
   }
 };
 
+const paginateAllTodos = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 2;
+    const skip = (page - 1) * limit;
+
+    const someTasks = await todoModel
+      .find({ userId: req.userId })
+      .skip(skip)
+      .limit(limit);
+    return res.status(200).json({
+      success: true,
+      message: "Todo fetched Successfully",
+      data: someTasks,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: true,
+      message: "Internal server error.",
+    });
+  }
+};
+
 const updateTodo = async (req, res) => {
   try {
     const taskId = req.params.taskId;
@@ -156,4 +179,4 @@ const delTodo = async (req, res) => {
   }
 };
 
-export { createTodo, getTodos, updateTodo, delTodo };
+export { createTodo, getTodos, paginateAllTodos, updateTodo, delTodo };

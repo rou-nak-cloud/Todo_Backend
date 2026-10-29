@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { userModel } from "../models/userModel.js";
+import { sessionModel } from "../models/sessionModel.js";
 
 export const userToken = async (req, res, next) => {
   try {
@@ -25,7 +26,8 @@ export const userToken = async (req, res, next) => {
           });
         }
       } else {
-        const { id } = decoded;
+        // extracting sessionId also to determine in which session is on
+        const { id, sessionId } = decoded;
         const user = await userModel.findOne({ _id: id });
         if (!user) {
           return res.status(400).json({
@@ -33,7 +35,18 @@ export const userToken = async (req, res, next) => {
             message: "User not found to access anything..",
           });
         }
+        const activeSessionExists = await sessionModel.find({
+          _id: req.sessionId,
+        });
+        if (!activeSessionExists) {
+          return res.status(404).json({
+            success: true,
+            message: "No session found or expired!",
+          });
+        }
+
         req.userId = id;
+        req.sessionId = sessionId;
         next();
       }
     });

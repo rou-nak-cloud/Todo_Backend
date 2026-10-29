@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 dotenv.config();
 import { verifyEmail } from "../nodemailer/nodeMailer.js";
+import { sessionModel } from "../models/sessionModel.js";
 
 const registerUser = async (req, res) => {
   try {
@@ -13,19 +14,25 @@ const registerUser = async (req, res) => {
     if (!phoneNumber || !userName.trim() || !email.trim() || !password.trim()) {
       return res.status(400).json({
         success: false,
-        message: "All fields must be present..",
+        message: "All fields must be present..and phone must be in number.",
       });
     }
-    if (Number.isNaN(phoneNumber)) {
-      return res.status(400).json({
-        success: false,
-        message: "Please enter a valid phone number.",
-      });
-    }
+    // if (Number.isNaN(phoneNumber)) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Please enter a valid phone number.",
+    //   });
+    // }
 
     const existingUser = await userModel.findOne({
-      email: email.trim(),
-      phone: phoneNumber,
+      $or: [
+        {
+          email: email.trim(),
+        },
+        {
+          phone: phoneNumber,
+        },
+      ],
     });
     if (existingUser) {
       return res.status(409).json({
@@ -154,15 +161,29 @@ const logIn = async (req, res) => {
         message: "Invalid Credentials..",
       });
     } else if (comparePassword && user.isVerified === true) {
+      // creating new session
+      const newSession = await sessionModel.create({ userId: user._id });
+
+      // find all sessions, more than 3 terminate
+      const existingSession = await sessionModel.find({ userId: user._id });
+      if (existingSession && existingSession.length > 3) {
+        await sessionModel.deleteMany({ userId: user._id });
+        return res.status(400).json({
+          success: false,
+          message:
+            "Device limit exceed (max 3 devices). All session terminated. Please log in again.",
+        });
+      }
+
       const accessToken = jwt.sign(
-        { id: user._id, userName: user.userName },
+        { id: user._id, sessionId: newSession._id },
         process.env.secretKey,
         {
           expiresIn: "10days",
         },
       );
       const refreshToken = jwt.sign(
-        { id: user._id, userName: user.userName },
+        { id: user._id, sessionId: newSession._id },
         process.env.secretKey,
         {
           expiresIn: "30days",
@@ -175,6 +196,7 @@ const logIn = async (req, res) => {
         message: `${user.userName} logged In .... Welcome ${user.userName}, Good to see you here!!`,
         accessToken: accessToken,
         refreshToken: refreshToken,
+        session: newSession._id,
         data: user,
       });
     } else {
@@ -191,4 +213,59 @@ const logIn = async (req, res) => {
   }
 };
 
-export { registerUser, verifyToken, logIn };
+
+const logOut = async (req, res) => {
+  try {
+    const activeSession = await sessionModel.findOne({ _id: req.sessionId });
+    const user = await userModel.findOne({ _id: req.userId });
+
+    if (activeSession) {
+      await sessionModel.findOneAndDelete({ _id: req.sessionId });
+      user.isLoggedIn = false;
+      await user.save();
+      return res.status(200).json({
+        success: true,
+        message: "User log out successfully!",
+      });
+    } else {
+      return res.status(404).json({
+        success: true,
+        message: "No active user session found!",
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
+const logOutAll = async (req, res) => {
+  try {
+    const activeAllSession = await sessionModel.find({ userId: req.userId });
+    const user = await userModel.findOne({ _id: req.userId });
+
+    if (activeAllSession && activeAllSession.length > 0) {
+      await sessionModel.deleteMany({ userId: req.userId });
+      user.isLoggedIn = false;
+      await user.save();
+      return res.status(200).json({
+        success: true,
+        message: "User log out from all devices successfully!",
+      });
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: "No active user session found!",
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
+export { registerUser, verifyToken, logIn, logOut, logOutAll };

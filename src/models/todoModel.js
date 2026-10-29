@@ -8,6 +8,11 @@ const todoSchema = new mongoose.Schema(
       ref: "user",
       required: true,
     },
+    sessionUserId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "session",
+      required: true,
+    },
   },
   { timestamps: true },
 );

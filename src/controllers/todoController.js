@@ -23,6 +23,7 @@ const createTodo = async (req, res) => {
     const tasks = await todoModel.create({
       title: title.trim(),
       userId: req.userId,
+      sessionUserId: req.sessionId,
     });
 
     res.status(201).json({

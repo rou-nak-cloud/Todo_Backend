@@ -6,11 +6,17 @@ import {
   updateTodo,
 } from "../controllers/todoController.js";
 import { userToken } from "../middlewares/userToken.js";
+import { titleValidate, validateTodo } from "../validators/todoValidate.js";
 const todoRoute = express.Router();
 
-todoRoute.post("/addTask", userToken, createTodo);
+todoRoute.post("/addTask", userToken, validateTodo(titleValidate), createTodo);
 todoRoute.get("/getTask", userToken, getTodos);
-todoRoute.put("/updateTask/:taskId", userToken, updateTodo);
+todoRoute.put(
+  "/updateTask/:taskId",
+  userToken,
+  validateTodo(titleValidate),
+  updateTodo,
+);
 todoRoute.delete("/delTask/:taskId", userToken, delTodo);
 
 export default todoRoute;

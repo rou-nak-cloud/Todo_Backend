@@ -3,12 +3,12 @@ import todoModel from "../models/todoModel.js";
 const createTodo = async (req, res) => {
   try {
     const { title } = req.body;
-    if (!title || !title.trim()) {
-      return res.status(400).json({
-        success: false,
-        message: "Todo title is required and cannot be empty.",
-      });
-    }
+    // if (!title || !title.trim()) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Todo title is required and cannot be empty.",
+    //   });
+    // }
 
     const existingTask = await todoModel.findOne({
       title: title.trim(),
@@ -66,12 +66,12 @@ const updateTodo = async (req, res) => {
     const taskId = req.params.taskId;
     const { title } = req.body;
 
-    if (!title || !title.trim()) {
-      return res.status(400).json({
-        success: false,
-        message: "Todo title is required and cannot be empty.",
-      });
-    }
+    // if (!title || !title.trim()) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Todo title is required and cannot be empty.",
+    //   });
+    // }
 
     const existingTaskPresent = await todoModel.findById({ _id: taskId });
     if (!existingTaskPresent) {

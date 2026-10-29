@@ -10,17 +10,10 @@ import { sessionModel } from "../models/sessionModel.js";
 const registerUser = async (req, res) => {
   try {
     const { userName, email, password, phone } = req.body;
-    const phoneNumber = Number(phone);
-    if (!phoneNumber || !userName.trim() || !email.trim() || !password.trim()) {
-      return res.status(400).json({
-        success: false,
-        message: "All fields must be present..and phone must be in number.",
-      });
-    }
-    // if (Number.isNaN(phoneNumber)) {
+    // if (!phoneNumber || !userName.trim() || !email.trim() || !password.trim()) {
     //   return res.status(400).json({
     //     success: false,
-    //     message: "Please enter a valid phone number.",
+    //     message: "All fields must be present..and phone must be in number.",
     //   });
     // }
 
@@ -30,7 +23,7 @@ const registerUser = async (req, res) => {
           email: email.trim(),
         },
         {
-          phone: phoneNumber,
+          phone: phone,
         },
       ],
     });
@@ -47,7 +40,7 @@ const registerUser = async (req, res) => {
     const user = await userModel.create({
       userName: userName.trim(),
       email: email.trim(),
-      phone: phoneNumber,
+      phone: phone,
       password: hashedPassword,
       token: "Not verified till now..",
     });
@@ -57,7 +50,7 @@ const registerUser = async (req, res) => {
       { id: user._id, userName: user.userName },
       process.env.secretKey,
       {
-        expiresIn: "1m",
+        expiresIn: "10m",
       },
     );
     user.token = token;
@@ -82,6 +75,7 @@ const registerUser = async (req, res) => {
       data: user,
     });
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       success: false,
       message: "Internal Server Error",
@@ -256,12 +250,12 @@ const generateAccessToken = async (req, res) => {
 const logIn = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email.trim() || !password.trim()) {
-      return res.status(400).json({
-        success: false,
-        message: "Fields can not be empty..",
-      });
-    }
+    // if (!email.trim() || !password.trim()) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Fields can not be empty..",
+    //   });
+    // }
     const user = await userModel.findOne({ email: email });
     if (!user) {
       return res.status(400).json({
@@ -269,7 +263,7 @@ const logIn = async (req, res) => {
         message: "User not found..",
       });
     }
-    const comparePassword = bcrypt.compare(password, user.password);
+    const comparePassword = await bcrypt.compare(password, user.password);
     if (!comparePassword) {
       return res.status(400).json({
         success: false,

@@ -5,7 +5,7 @@ import { sessionModel } from "../models/sessionModel.js";
 export const userToken = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader.trim() || !authHeader.trim().startsWith("Bearer")) {
+    if (!authHeader || !authHeader.trim().startsWith("Bearer")) {
       return res.status(400).json({
         success: false,
         message: "Token not found..",
@@ -35,8 +35,8 @@ export const userToken = async (req, res, next) => {
             message: "User not found to access anything..",
           });
         }
-        const activeSessionExists = await sessionModel.find({
-          _id: req.sessionId,
+        const activeSessionExists = await sessionModel.findOne({
+          _id: sessionId,
         });
         if (!activeSessionExists) {
           return res.status(404).json({

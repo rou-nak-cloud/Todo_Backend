@@ -57,7 +57,7 @@ const registerUser = async (req, res) => {
       { id: user._id, userName: user.userName },
       process.env.secretKey,
       {
-        expiresIn: "10m",
+        expiresIn: "1m",
       },
     );
     user.token = token;
@@ -134,6 +134,57 @@ const verifyToken = async (req, res) => {
     return res.status(500).json({
       success: true,
       message: "Internal server error..",
+    });
+  }
+};
+
+const reVerifyToken = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email || !email.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Field must be required",
+      });
+    }
+    const user = await userModel.findOne({ email: email.trim() });
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Please register first for re verification.",
+      });
+    } else if (user.isVerified === true) {
+      return res.status(400).json({
+        success: false,
+        message: "You are already verified.",
+      });
+    }
+    const newToken = jwt.sign(
+      { id: user._id, userName: user.userName },
+      process.env.secretKey,
+      {
+        expiresIn: "10m",
+      },
+    );
+    user.token = newToken;
+    try {
+      await verifyEmail(newToken, email);
+    } catch (error) {
+      console.log(error.message, error.cause);
+      return res.status(500).json({
+        success: false,
+        message: "Error in sending email.",
+      });
+    }
+    await user.save();
+    return res.status(200).json({
+      success: true,
+      message: "Kindly verify within 10 mins.",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error.",
     });
   }
 };
@@ -288,7 +339,7 @@ const logOut = async (req, res) => {
       await user.save();
       return res.status(200).json({
         success: true,
-        message: "User log out successfully!",
+        message: `${user.userName} log out successfully!`,
       });
     } else {
       return res.status(404).json({
@@ -315,7 +366,7 @@ const logOutAll = async (req, res) => {
       await user.save();
       return res.status(200).json({
         success: true,
-        message: "User log out from all devices successfully!",
+        message: `${user.userName} log out from all devices successfully!`,
       });
     } else {
       return res.status(404).json({
@@ -334,6 +385,7 @@ const logOutAll = async (req, res) => {
 export {
   registerUser,
   verifyToken,
+  reVerifyToken,
   logIn,
   logOut,
   logOutAll,

@@ -5,6 +5,7 @@ import {
   logOut,
   logOutAll,
   registerUser,
+  reVerifyToken,
   verifyToken,
 } from "../controllers/userController.js";
 import { userToken } from "../middlewares/userToken.js";
@@ -13,6 +14,7 @@ const userRoute = express.Router();
 
 userRoute.post("/register", registerUser);
 userRoute.get("/verify", verifyToken);
+userRoute.post("/reverify", reVerifyToken);
 userRoute.post("/login", logIn);
 userRoute.get("/refresh", generateAccessToken);
 userRoute.delete("/logout", userToken, logOut);

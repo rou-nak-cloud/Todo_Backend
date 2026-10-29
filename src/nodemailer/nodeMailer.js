@@ -24,6 +24,6 @@ export const verifyEmail = async (token, email) => {
     console.log(info);
   } catch (error) {
     console.log("Error in sending Email", error);
-    throw new Error(error);
+    throw new Error("Error in sending mail..", { cause: error });
   }
 };

@@ -138,6 +138,70 @@ const verifyToken = async (req, res) => {
   }
 };
 
+const generateAccessToken = async (req, res) => {
+  try {
+    const authRefreshHeader = req.headers.authorization;
+    if (!authRefreshHeader || !authRefreshHeader.startsWith("Bearer")) {
+      return res.status(400).json({
+        success: false,
+        message: "Token not found..",
+      });
+    }
+    const refreshToken = authRefreshHeader.split(" ")[1];
+    jwt.verify(refreshToken, process.env.secretKey, async (err, decode) => {
+      if (err) {
+        if (err.message === "ExpiredTokenError") {
+          return res.status(401).json({
+            success: false,
+            message: "Token Expired",
+          });
+        }
+        return res.status(401).json({
+          success: false,
+          message: "Token invalid or expired.",
+        });
+      }
+      const { id, sessionId } = decode;
+      const user = await userModel.findOne({ _id: id });
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          message: "User not found..",
+        });
+      }
+      const activeSessionRefresh = await sessionModel.findOne({
+        _id: sessionId,
+        userId: id,
+      });
+
+      if (!activeSessionRefresh) {
+        return res.status(401).json({
+          success: false,
+          message:
+            "User not found in this session for regenerating access token.",
+        });
+      }
+      const newAccessToken = jwt.sign(
+        { id: id, sessionId: sessionId },
+        process.env.secretKey,
+        {
+          expiresIn: "10days",
+        },
+      );
+      return res.status(201).json({
+        success: true,
+        message: "New Access Token generated.",
+        accessToken: newAccessToken,
+      });
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
 const logIn = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -213,7 +277,6 @@ const logIn = async (req, res) => {
   }
 };
 
-
 const logOut = async (req, res) => {
   try {
     const activeSession = await sessionModel.findOne({ _id: req.sessionId });
@@ -268,4 +331,11 @@ const logOutAll = async (req, res) => {
   }
 };
 
-export { registerUser, verifyToken, logIn, logOut, logOutAll };
+export {
+  registerUser,
+  verifyToken,
+  logIn,
+  logOut,
+  logOutAll,
+  generateAccessToken,
+};

@@ -4,10 +4,15 @@ import {
   delTodo,
   getTodos,
   paginateAllTodos,
+  toggleTodoStatus,
   updateTodo,
 } from "../controllers/todoController.js";
 import { userToken } from "../middlewares/userToken.js";
-import { titleValidate, validateTodo } from "../validators/todoValidate.js";
+import {
+  titleValidate,
+  toggleStatusValidate,
+  validateTodo,
+} from "../validators/todoValidate.js";
 const todoRoute = express.Router();
 
 todoRoute.post("/addTask", userToken, validateTodo(titleValidate), createTodo);
@@ -18,6 +23,12 @@ todoRoute.put(
   userToken,
   validateTodo(titleValidate),
   updateTodo,
+);
+todoRoute.put(
+  "/toggleTask/:taskId",
+  userToken,
+  validateTodo(toggleStatusValidate),
+  toggleTodoStatus,
 );
 todoRoute.delete("/delTask/:taskId", userToken, delTodo);
 

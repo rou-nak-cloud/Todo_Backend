@@ -141,6 +141,37 @@ const updateTodo = async (req, res) => {
   }
 };
 
+const toggleTodoStatus = async (req, res) => {
+  try {
+    const taskId = req.params.taskId;
+    const { completed } = req.body;
+
+    const exactTodo = await todoModel.findOne({
+      _id: taskId,
+      userId: req.userId,
+    });
+    if (!exactTodo) {
+      return res.status(404).json({
+        success: false,
+        message: "Todo not found.",
+      });
+    }
+    exactTodo.completed = completed;
+    await exactTodo.save();
+    return res.status(200).json({
+      success: true,
+      message: "Todo status updated successfully",
+      data: exactTodo,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
 const delTodo = async (req, res) => {
   try {
     const taskId = req.params.taskId;
@@ -179,4 +210,11 @@ const delTodo = async (req, res) => {
   }
 };
 
-export { createTodo, getTodos, paginateAllTodos, updateTodo, delTodo };
+export {
+  createTodo,
+  getTodos,
+  paginateAllTodos,
+  updateTodo,
+  toggleTodoStatus,
+  delTodo,
+};

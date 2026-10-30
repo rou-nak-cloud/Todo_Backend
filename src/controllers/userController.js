@@ -23,14 +23,15 @@ const registerUser = async (req, res) => {
           email: email.trim(),
         },
         {
-          phone: phone,
+          userName: userName.trim(),
         },
       ],
     });
     if (existingUser) {
+      const fieldPresent = existingUser.email === email ? "email" : "userName";
       return res.status(409).json({
         success: false,
-        message: "User already registered..",
+        message: `That ${fieldPresent} is already registered. Please use another one.`,
       });
     }
 

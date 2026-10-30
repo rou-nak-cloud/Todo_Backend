@@ -16,11 +16,7 @@ export const titleValidate = y.object({
 // })
 
 export const toggleStatusValidate = y.object({
-  completed: y
-    .boolean()
-    .required(
-      "The completed field is required and must be a boolean (true or false).",
-    ),
+  completed: y.boolean().optional(),
 });
 
 export const validateTodo = (schema) => async (req, res, next) => {

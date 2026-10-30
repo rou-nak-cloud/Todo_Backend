@@ -60,6 +60,44 @@ export const loginSchema = y.object({
   password: y.string().required("Password is required"),
 });
 
+export const forgotPassValidate = y.object({
+  email: y.string().email("The email is not a valid email address.").required(),
+  newPassword: y
+    .string()
+    .trim()
+    .required("Enter a password")
+    .test(
+      "minLength",
+      "Password Must be at least 8 characters long",
+      (val) => val && val.length >= 8,
+    )
+    .test(
+      "maxLength",
+      "Password Must be at most 12 characters long",
+      (val) => val && val.length <= 12,
+    )
+    .test(
+      "uppercase",
+      "Password Must contain at least one uppercase letter",
+      (val) => val && /[A-Z]/.test(val),
+    )
+    .test(
+      "lowercase",
+      "Password Must contain at least one lowercase letter",
+      (val) => val && /[a-z]/.test(val),
+    )
+    .test(
+      "number",
+      "Password Must contain at least one number",
+      (val) => val && /[0-9]/.test(val),
+    )
+    .test(
+      "special",
+      "Password Must contain at least one special character",
+      (val) => val && /[!@#\$%\^&\*]/.test(val),
+    ),
+});
+
 // export const emailSchema = y.object({
 //   email: y.string().email("Invalid email").required("Email is required").trim(),
 // });

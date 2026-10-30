@@ -323,6 +323,38 @@ const logIn = async (req, res) => {
   }
 };
 
+const forgotPassword = async (req, res) => {
+  try {
+    const { email, newPassword, confirmPassword } = req.body;
+
+    if (newPassword !== confirmPassword) {
+      return res.status(401).json({
+        success: false,
+        message: "New Password and Confirm Password does not match.",
+      });
+    }
+    const user = await userModel.findOne({ email: email });
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User not found, Register first..",
+      });
+    }
+    const newHashPassword = await bcrypt.hash(newPassword, 10);
+    user.password = newHashPassword;
+    await user.save();
+    return res.status(201).json({
+      success: true,
+      message: "Password Updated Successfully.",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
 const logOut = async (req, res) => {
   try {
     const activeSession = await sessionModel.findOne({ _id: req.sessionId });
@@ -382,6 +414,7 @@ export {
   verifyToken,
   reVerifyToken,
   logIn,
+  forgotPassword,
   logOut,
   logOutAll,
   generateAccessToken,
